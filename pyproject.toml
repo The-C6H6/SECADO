@@ -1,14 +1,14 @@
 [project]
 name = "secado-app-1er-parcial"
 version = "0.1.0"
-description = "Add your description here"
+description = "Modular drying calculations with explicit units and a Flet interface"
 readme = "README.md"
 authors = [
     { name = "Diego Vázquez", email = "C6H6_X@proton.me" }
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "flet>=1.0.3",
+    "flet[desktop,web]>=1.0.3",
     "psychrolib>=2.5.0",
     "pytest>=9.1.1",
 ]
@@ -19,3 +19,7 @@ secado-app-1er-parcial = "secado_app_1er_parcial:main"
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
