@@ -18,4 +18,4 @@ Para secador continuo los cálculos se encuentran en @./CALCULOS/directo.md
 Para secador rotatorio los cálculos se encuentran en @./CALCULOS/secador_rotatorio.md
 
 ## Manejo de errores
-psycrolib
+La app debe manejar excepción de errores para valores de psychrolib
