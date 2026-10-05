@@ -1,2 +1,4 @@
 def main() -> None:
-    print("Hello from secado-app-1er-parcial!")
+    from .ui.app import run
+
+    run()
