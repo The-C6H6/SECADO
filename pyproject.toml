@@ -1,0 +1,21 @@
+[project]
+name = "secado-app-1er-parcial"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Diego Vázquez", email = "C6H6_X@proton.me" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "flet>=1.0.3",
+    "psychrolib>=2.5.0",
+    "pytest>=9.1.1",
+]
+
+[project.scripts]
+secado-app-1er-parcial = "secado_app_1er_parcial:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
