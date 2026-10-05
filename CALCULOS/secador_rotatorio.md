@@ -116,7 +116,7 @@ D = sqrt((4 * mg_Total_salida) / (π * G)) [=] ft
 
 15. Cálculo del coeficiente convectivo volumétrico ha
 
-ha = (1058**0.67)/2 * D
+ha = (G**0.67)/2 * D
 ha[=] Btu/(h * ft3 * F)
 
 17. Cálculo de longitud del secador L

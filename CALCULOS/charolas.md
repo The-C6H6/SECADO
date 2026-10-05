@@ -5,13 +5,13 @@
 ### Datos requeridos dentro de textfields modificables
 
 1. Área de la Charola: Puede darse en unidades de in2, cm2, m2, ft2. Sin embargo, el sistema debe calcular el valór a m2.
-2. Masa del solido humedo
+2. Masa del solido humedo en lb/h
 3. Contenido de Humedad del sólido: Puede darse en base seca o base humeda en %.
 4. Presión de aire: Siempre 1 atm
-5. 2 Datos para poder usar la carta psicrométirica en el aire. Pueden ser : Humedad relativa, Humedad absoluta, Temperatura de rocío, Temperatura de bulbo humedo o Temperatura de bulbo seco.
+5. 2 Datos para poder usar la carta psicrométirica en el aire. Pueden ser : Humedad relativa, Humedad absoluta, Temperatura de rocío, Temperatura de bulbo humedo o Temperatura de bulbo seco. debe devolver los datos en sistema ingles
 De ser el caso que los datos sean Temperaturas pueden estar en Rankie, Farenheit, Celcius o Kelvin. El sistema deberá convertirlas a Farenheit por sistema inglés.
 6. Velocidad del aire : en metros/hora.
-7. Calor latente de ebullición a temperatura de bulbo humedo.
+7. Calor latente de ebullición a temperatura de bulbo humedo en Btu/lb.
 8. Humedad crítica (salida del sólido): Puede darse en base seca o base humeda en %.
 
 ### Fórmula necesaria
@@ -136,6 +136,7 @@ Tiempo Crítico = mv*(delta_H)/(h*(Td-Tw)*A) [=] segundos
     Wo=Humedad crítica (salida del sólido) base húmeda
     Xo = 100*Wo/(100-Wo)
     mo_H2O = mss*(Xo/100)
+    Xo y Wo están en porcentajes.
     
     mv= mi_H2O-mo_H2O
 
@@ -165,7 +166,7 @@ Td y Tw deben haber sido convertidas previamente en °F.
     Para Re > 350
     h = 0.151 * G^0.59 / d_p^0.41
 
-    Para Re < 350:
+    Para Re <= 350:
     h = 0.214 * G^0.49 / d_p^0.51
 
     Donde: Re= G*dp/viscosidad_aire
