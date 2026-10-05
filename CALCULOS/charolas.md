@@ -5,7 +5,7 @@
 ### Datos requeridos dentro de textfields modificables
 
 1. Área de la Charola: Puede darse en unidades de in2, cm2, m2, ft2. Sin embargo, el sistema debe calcular el valór a m2.
-2. Masa del solido humedo en lb/h
+2. Masa del solido humedo en kg
 3. Contenido de Humedad del sólido: Puede darse en base seca o base humeda en %.
 4. Presión de aire: Siempre 1 atm
 5. 2 Datos para poder usar la carta psicrométirica en el aire. Pueden ser : Humedad relativa, Humedad absoluta, Temperatura de rocío, Temperatura de bulbo humedo o Temperatura de bulbo seco. debe devolver los datos en sistema ingles
