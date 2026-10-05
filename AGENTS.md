@@ -15,7 +15,7 @@ Calculador de problemas de ingeniería química enfocadas a secado para Windows 
 
 Para secador tipo charola los cálculos estan en @./CALCULOS/charolas.md
 Para secador continuo los cálculos se encuentran en @./CALCULOS/directo.md
-Para secador rotatorio los cálculos se encuentran en @./CALCULOS/directo.md
+Para secador rotatorio los cálculos se encuentran en @./CALCULOS/secador_rotatorio.md
 
 ## Manejo de errores
 psycrolib
