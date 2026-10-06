@@ -499,6 +499,8 @@ def main(page: ft.Page):
     page.theme = ft.Theme(color_scheme_seed=ACCENT, font_family='Segoe UI')
     page.bgcolor = BACKGROUND
     page.padding = 20
+    page.window.width = 1000
+    page.window.height = 800
     page.scroll = ft.ScrollMode.AUTO
     page.add(Workbench(page.update).control)
 
