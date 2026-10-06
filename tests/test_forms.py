@@ -1,4 +1,5 @@
 import pytest
+import flet as ft
 
 from secado_app_1er_parcial.ui.app import (
     ACCENT,
@@ -9,12 +10,95 @@ from secado_app_1er_parcial.ui.app import (
 from secado_app_1er_parcial.ui.fields import MODE_DETAILS, MODES
 
 
+def semantic_groups(form):
+    controls_to_keys = {id(control): key for key, control in form.fields.items()}
+    return [
+        tuple(controls_to_keys[id(control)] for control in group.controls)
+        for group in form.input_controls
+        if isinstance(group, ft.ResponsiveRow)
+        and group.controls
+        and all(id(control) in controls_to_keys for control in group.controls)
+    ]
+
+
 def test_every_mode_has_specific_interface_copy():
     assert MODE_DETAILS.keys() == MODES.keys()
     for mode, details in MODE_DETAILS.items():
         assert details['eyebrow']
         assert details['title'] == MODES[mode]
         assert details['description']
+
+
+@pytest.mark.parametrize('mode,expected_groups', [
+    ('air', [
+        ('temperature_unit',), ('air1_key', 'air1'), ('air2_key', 'air2'),
+    ]),
+    ('conversion', [('value', 'source', 'target')]),
+    ('tray', [
+        ('temperature_unit',), ('air1_key', 'air1'), ('air2_key', 'air2'),
+        ('mass',), ('initial', 'initial_basis'), ('final', 'final_basis'),
+        ('velocity', 'velocity_unit'), ('area', 'area_unit'), ('latent', 'latent_unit'),
+    ]),
+    ('continuous', [
+        ('temperature_unit',), ('air1_key', 'air1'), ('air2_key', 'air2'), ('outlet',),
+    ]),
+    ('rotary', [
+        ('temperature_unit',), ('air1_key', 'air1'), ('air2_key', 'air2'),
+        ('mass',), ('initial', 'initial_basis'), ('final', 'final_basis'), ('velocity',),
+        ('solid_inlet', 'solid_outlet'), ('cp_solid', 'latent'), ('nt',),
+        ('cp_air', 'cp_vapor'), ('cp_liquid',),
+    ]),
+])
+def test_forms_declare_semantic_groups_in_reading_order(mode, expected_groups):
+    form = CalculatorForm(mode, lambda: None)
+    assert semantic_groups(form) == expected_groups
+
+
+def test_group_columns_stack_in_narrow_views_and_share_rows_when_space_allows():
+    form = CalculatorForm('conversion', lambda: None)
+    group = form.input_controls[0]
+    assert isinstance(group, ft.ResponsiveRow)
+    assert [control.col for control in group.controls] == [
+        {'xs': 12, 'md': 4}, {'xs': 12, 'md': 4}, {'xs': 12, 'md': 4},
+    ]
+    assert all(control.expand is True for control in group.controls)
+
+
+def test_extruded_geometry_and_bed_controls_remain_in_semantic_groups():
+    form = CalculatorForm('extruded', lambda: None)
+    controls_to_keys = {id(control): key for key, control in form.fields.items()}
+    assert tuple(controls_to_keys[id(control)] for control in form.geometry_header.controls) == (
+        'shape', 'length_unit',
+    )
+    assert [
+        tuple(controls_to_keys[id(control)] for control in group.controls)
+        for group in form.geometry_controls.controls
+    ] == [('r', 'h')]
+    groups = semantic_groups(form)
+    assert ('height', 'height_unit') in groups
+    assert ('porosity', 'viscosity') in groups
+    height_group = next(
+        group for group in form.input_controls
+        if isinstance(group, ft.ResponsiveRow)
+        and form.fields['height'] in group.controls
+    )
+    assert form.input_controls.index(height_group) > form.input_controls.index(
+        form.geometry_section)
+
+
+def test_reorganization_preserves_field_keys_and_data_mapping():
+    form = CalculatorForm('tray', lambda: None)
+    expected_keys = {
+        'temperature_unit', 'air1_key', 'air1', 'air2_key', 'air2', 'mass',
+        'initial', 'initial_basis', 'final', 'final_basis', 'velocity',
+        'velocity_unit', 'area', 'area_unit', 'latent', 'latent_unit',
+    }
+    assert set(form.fields) == expected_keys
+    for index, control in enumerate(form.fields.values()):
+        control.value = f'value-{index}'
+    assert form._data() == {
+        key: control.value for key, control in form.fields.items()
+    }
 
 
 def test_continuous_form_calculates_and_clears_stale_results_on_error():

@@ -73,8 +73,14 @@ class CalculatorForm:
         )
         self.input_controls = []
         self.geometry_keys = []
-        self.geometry_controls = ft.ResponsiveRow()
+        self.geometry_header = ft.ResponsiveRow(spacing=12, run_spacing=12)
+        self.geometry_controls = ft.Column(spacing=12)
         self.image = ft.Image(src='', height=150, visible=False)
+        self.geometry_section = ft.Column([
+            self.geometry_header,
+            self.image,
+            self.geometry_controls,
+        ], spacing=12)
         self.air_preview = ft.Markdown('')
         self._build_inputs()
         left = ft.Column([
@@ -83,8 +89,7 @@ class CalculatorForm:
                     color=INK, font_family='Bahnschrift'),
             ft.Text('Introduce los valores del ejercicio y selecciona la unidad de cada magnitud.',
                     color=MUTED),
-            ft.ResponsiveRow(self.input_controls, run_spacing=14),
-            self.image, self.geometry_controls,
+            ft.Column(self.input_controls, spacing=14),
         ], spacing=16)
         if mode == 'rotary':
             left.controls += [ft.Button('Calcular aire y límites de Tds', icon=ft.Icons.AIR,
@@ -126,7 +131,7 @@ class CalculatorForm:
             self.result_panel,
         ], spacing=20, run_spacing=20)
 
-    def _text(self, key, label, default='', *, controls=None):
+    def _text(self, key, label, default=''):
         control = ft.TextField(
             label=label, value=default, col={'xs': 12, 'sm': 6},
             on_change=self.invalidate, filled=True, fill_color=FIELD_BACKGROUND,
@@ -136,10 +141,9 @@ class CalculatorForm:
             },
         )
         self.fields[key] = control
-        (self.input_controls if controls is None else controls).append(control)
         return control
 
-    def _select(self, key, label, options, default, *, controls=None, handler=None):
+    def _select(self, key, label, options, default, *, handler=None):
         if not isinstance(options, dict):
             options = {value: value for value in options}
         control = ft.Dropdown(label=label, value=default,
@@ -151,63 +155,145 @@ class CalculatorForm:
                 ft.ControlState.FOCUSED: _input_border(ACCENT, 2),
             })
         self.fields[key] = control
-        (self.input_controls if controls is None else controls).append(control)
         return control
+
+    @staticmethod
+    def _set_group_columns(controls):
+        count = len(controls)
+        for control in controls:
+            control.expand = True
+        if count == 1:
+            controls[0].col = {'xs': 12}
+            return
+        breakpoint = 'md' if count == 3 else 'sm'
+        width = 12 // count
+        for control in controls:
+            control.col = {'xs': 12, breakpoint: width}
+
+    def _group(self, *controls, target=None):
+        controls = list(controls)
+        self._set_group_columns(controls)
+        group = ft.ResponsiveRow(controls, spacing=12, run_spacing=12)
+        (self.input_controls if target is None else target).append(group)
+        return group
 
     def _build_inputs(self):
         mode = self.mode
         if mode == 'conversion':
-            self._text('value', 'Valor')
-            options = list(units.TEMPERATURES)+list(units.SCALES)
-            self._select('source', 'Unidad de origen', options, 'ft')
-            self._select('target', 'Unidad de destino', options, 'm')
+            options = list(units.TEMPERATURES) + list(units.SCALES)
+            self._group(
+                self._text('value', 'Valor'),
+                self._select('source', 'Unidad de origen', options, 'ft'),
+                self._select('target', 'Unidad de destino', options, 'm'),
+            )
             return
+
         if mode != 'geometry':
-            self._select('temperature_unit', 'Unidad de todas las temperaturas', ['F', 'C', 'K', 'R'], 'F')
-            self._select('air1_key', 'Primera propiedad del aire',
-                         {'dry_bulb': 'Bulbo seco'} if mode == 'continuous' else PROPERTIES, 'dry_bulb')
-            self._text('air1', 'Valor de primera propiedad')
-            second = {key: PROPERTIES[key] for key in ('relative_humidity', 'humidity_ratio')} if mode == 'continuous' else PROPERTIES
-            self._select('air2_key', 'Segunda propiedad del aire', second, 'relative_humidity')
-            self._text('air2', 'Valor de segunda propiedad')
-            self.input_controls.append(ft.Text('Presión fija: 1 atm = 14.69595 psi. '
-                'HR en %; humedad absoluta en lb agua/lb aire seco. Las temperaturas usan la unidad seleccionada.'))
+            self._group(self._select(
+                'temperature_unit', 'Unidad de todas las temperaturas',
+                ['F', 'C', 'K', 'R'], 'F'))
+            first_properties = (
+                {'dry_bulb': 'Bulbo seco'} if mode == 'continuous' else PROPERTIES
+            )
+            self._group(
+                self._select('air1_key', 'Primera propiedad del aire',
+                             first_properties, 'dry_bulb'),
+                self._text('air1', 'Valor de primera propiedad'),
+            )
+            second_properties = (
+                {key: PROPERTIES[key]
+                 for key in ('relative_humidity', 'humidity_ratio')}
+                if mode == 'continuous' else PROPERTIES
+            )
+            self._group(
+                self._select('air2_key', 'Segunda propiedad del aire',
+                             second_properties, 'relative_humidity'),
+                self._text('air2', 'Valor de segunda propiedad'),
+            )
+            self.input_controls.append(ft.Text(
+                'Presión fija: 1 atm = 14.69595 psi. HR en %; humedad absoluta '
+                'en lb agua/lb aire seco. Las temperaturas usan la unidad seleccionada.'))
+
         if mode in {'tray', 'extruded', 'rotary'}:
-            self._text('mass', 'Flujo de sólido seco (lb/h)' if mode == 'rotary' else 'Masa de sólido húmedo (kg)')
-            self._text('initial', 'Humedad inicial (%)')
-            self._select('initial_basis', 'Base inicial', {'wet': 'Base húmeda', 'dry': 'Base seca'}, 'wet')
-            self._text('final', 'Humedad final / crítica (%)')
-            self._select('final_basis', 'Base final', {'wet': 'Base húmeda', 'dry': 'Base seca'}, 'dry')
-            self._text('velocity', 'Velocidad del gas (ft/h)' if mode == 'rotary' else 'Velocidad del aire')
-            if mode != 'rotary':
-                self._select('velocity_unit', 'Unidad de velocidad', ['m/h', 'm/s', 'ft/h'], 'm/h')
+            mass_label = (
+                'Flujo de sólido seco (lb/h)' if mode == 'rotary'
+                else 'Masa de sólido húmedo (kg)'
+            )
+            self._group(self._text('mass', mass_label))
+            self._group(
+                self._text('initial', 'Humedad inicial (%)'),
+                self._select('initial_basis', 'Base inicial',
+                             {'wet': 'Base húmeda', 'dry': 'Base seca'}, 'wet'),
+            )
+            self._group(
+                self._text('final', 'Humedad final / crítica (%)'),
+                self._select('final_basis', 'Base final',
+                             {'wet': 'Base húmeda', 'dry': 'Base seca'}, 'dry'),
+            )
+            velocity = self._text(
+                'velocity',
+                'Velocidad del gas (ft/h)' if mode == 'rotary'
+                else 'Velocidad del aire',
+            )
+            if mode == 'rotary':
+                self._group(velocity)
+            else:
+                self._group(
+                    velocity,
+                    self._select('velocity_unit', 'Unidad de velocidad',
+                                 ['m/h', 'm/s', 'ft/h'], 'm/h'),
+                )
+
         if mode in {'tray', 'extruded'}:
-            self._text('area', 'Área de charola')
-            self._select('area_unit', 'Unidad del área de charola', ['m2', 'cm2', 'in2', 'ft2'], 'm2')
-            self._text('latent', 'Calor latente de vaporización a Tbh')
-            self._select('latent_unit', 'Unidad del calor latente', ['Btu/lb', 'J/kg'], 'Btu/lb')
+            self._group(
+                self._text('area', 'Área de charola'),
+                self._select('area_unit', 'Unidad del área de charola',
+                             ['m2', 'cm2', 'in2', 'ft2'], 'm2'),
+            )
+            self._group(
+                self._text('latent', 'Calor latente de vaporización a Tbh'),
+                self._select('latent_unit', 'Unidad del calor latente',
+                             ['Btu/lb', 'J/kg'], 'Btu/lb'),
+            )
+
         if mode in {'geometry', 'extruded'}:
-            self._select('shape', 'Figura', {k: v[0] for k, v in SHAPES.items()}, 'cylinder', handler=self.change_shape)
+            self._select(
+                'shape', 'Figura', {key: value[0] for key, value in SHAPES.items()},
+                'cylinder', handler=self.change_shape,
+            )
             self.change_shape(None, refresh=False)
+            self.input_controls.append(self.geometry_section)
+
         if mode == 'extruded':
-            self._text('height', 'Altura del lecho')
-            self._select('height_unit', 'Unidad de altura del lecho', ['m', 'cm', 'in', 'ft'], 'm')
-            self._text('porosity', 'Porosidad (%)')
-            self._text('viscosity', 'Viscosidad del aire (cP)', '0.02')
+            self._group(
+                self._text('height', 'Altura del lecho'),
+                self._select('height_unit', 'Unidad de altura del lecho',
+                             ['m', 'cm', 'in', 'ft'], 'm'),
+            )
+            self._group(
+                self._text('porosity', 'Porosidad (%)'),
+                self._text('viscosity', 'Viscosidad del aire (cP)', '0.02'),
+            )
+
         if mode == 'continuous':
-            self._text('outlet', 'Temperatura del aire de salida')
+            self._group(self._text('outlet', 'Temperatura del aire de salida'))
+
         if mode == 'rotary':
-            for key, label, default in [
-                ('solid_inlet', 'Temperatura del sólido húmedo', ''),
-                ('solid_outlet', 'Temperatura del sólido seco Tds', ''),
-                ('cp_solid', 'Cp sólido (Btu/(lb·°F))', ''),
-                ('latent', 'Calor latente a Tbh (Btu/lb)', ''),
-                ('nt', 'Unidades de transferencia NT', '1.5'),
-                ('cp_air', 'Cp aire (Btu/(lb·°F))', '0.242'),
-                ('cp_vapor', 'Cp vapor (Btu/(lb·°F))', '0.447'),
-                ('cp_liquid', 'Cp agua líquida (Btu/(lb·°F))', '1'),
-            ]:
-                self._text(key, label, default)
+            self._group(
+                self._text('solid_inlet', 'Temperatura del sólido húmedo'),
+                self._text('solid_outlet', 'Temperatura del sólido seco Tds'),
+            )
+            self._group(
+                self._text('cp_solid', 'Cp sólido (Btu/(lb·°F))'),
+                self._text('latent', 'Calor latente a Tbh (Btu/lb)'),
+            )
+            self._group(self._text('nt', 'Unidades de transferencia NT', '1.5'))
+            self._group(
+                self._text('cp_air', 'Cp aire (Btu/(lb·°F))', '0.242'),
+                self._text('cp_vapor', 'Cp vapor (Btu/(lb·°F))', '0.447'),
+            )
+            self._group(self._text(
+                'cp_liquid', 'Cp agua líquida (Btu/(lb·°F))', '1'))
 
     def change_shape(self, event, refresh=True):
         for key in self.geometry_keys:
@@ -217,16 +303,39 @@ class CalculatorForm:
         shape = self.fields['shape'].value
         if shape == 'other':
             area_key = 'area' if self.mode == 'geometry' else 'particle_area'
-            area_unit_key = 'area_unit' if self.mode == 'geometry' else 'particle_area_unit'
-            self._text(area_key, 'Área total de una partícula', controls=controls)
-            self._select(area_unit_key, 'Unidad de área de partícula', ['m2', 'cm2', 'in2', 'ft2'], 'm2', controls=controls)
-            self._text('volume', 'Volumen de una partícula', controls=controls)
-            self._select('volume_unit', 'Unidad de volumen', ['m3', 'cm3', 'in3', 'ft3'], 'm3', controls=controls)
+            area_unit_key = (
+                'area_unit' if self.mode == 'geometry' else 'particle_area_unit'
+            )
+            header_controls = [self.fields['shape']]
+            self._set_group_columns(header_controls)
+            self.geometry_header.controls = header_controls
+            self._group(
+                self._text(area_key, 'Área total de una partícula'),
+                self._select(area_unit_key, 'Unidad de área de partícula',
+                             ['m2', 'cm2', 'in2', 'ft2'], 'm2'),
+                target=controls,
+            )
+            self._group(
+                self._text('volume', 'Volumen de una partícula'),
+                self._select('volume_unit', 'Unidad de volumen',
+                             ['m3', 'cm3', 'in3', 'ft3'], 'm3'),
+                target=controls,
+            )
         else:
-            self._select('length_unit', 'Unidad de dimensiones de la figura', ['m', 'cm', 'in', 'ft'], 'm', controls=controls)
-            for key in geometry.DIMENSIONS[shape]:
-                self._text(key, DIMENSION_LABELS[key], controls=controls)
-        self.geometry_keys = list(set(self.fields)-before)
+            length_unit = self._select(
+                'length_unit', 'Unidad de dimensiones de la figura',
+                ['m', 'cm', 'in', 'ft'], 'm',
+            )
+            header_controls = [self.fields['shape'], length_unit]
+            self._set_group_columns(header_controls)
+            self.geometry_header.controls = header_controls
+            dimensions = [
+                self._text(key, DIMENSION_LABELS[key])
+                for key in geometry.DIMENSIONS[shape]
+            ]
+            for index in range(0, len(dimensions), 2):
+                self._group(*dimensions[index:index + 2], target=controls)
+        self.geometry_keys = list(set(self.fields) - before)
         self.geometry_controls.controls = controls
         self.image.src = SHAPES[shape][1]
         self.image.visible = shape != 'other'
