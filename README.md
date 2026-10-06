@@ -19,7 +19,7 @@ El CLI usa `main.py`; el lanzador oficial de Flet puede descargar su CLI auxilia
 en el primer uso.
 Los extras oficiales `flet[desktop,web]` están declarados e instalados con autorización
 del usuario. Las imágenes se leen de
-`Figuras/` en este checkout; todavía no se ha preparado un instalador de Windows.
+`assets/` en este checkout; todavía no se ha preparado un instalador de Windows.
 
 ## Funcionalidad
 
@@ -58,7 +58,7 @@ Las regresiones académicas usan los dos enunciados completos proporcionados:
 1% de tolerancia para tiempos y ±0.5 °F para Tbh por la diferencia entre carta
 psicrométrica y PsychroLib. No se modifican entradas ni constantes para ajustarlos.
 
-Se verificaron 174 pruebas, compilación y recursos HTTP de Flet. La inspección visual
+Se verificaron 175 pruebas, compilación y recursos HTTP de Flet. La inspección visual
 en navegador confirmó el formulario reducido del prisma y el renderizado LaTeX de las
 ecuaciones dentro de `ft.Markdown`.
 

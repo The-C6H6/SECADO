@@ -18,6 +18,7 @@ GRAPHITE = '#26343C'
 MUTED = '#61747E'
 DIVIDER = '#CCD9DE'
 WARNING = '#9A4A20'
+ASSETS_DIR = Path(__file__).resolve().parents[3] / 'assets'
 
 
 def _eyebrow(text: str, color: str = ACCENT) -> ft.Text:
@@ -394,5 +395,4 @@ def main(page: ft.Page):
 
 
 def run():
-    assets = Path(__file__).resolve().parents[3] / 'Figuras'
-    ft.run(main, assets_dir=str(assets))
+    ft.run(main, assets_dir=str(ASSETS_DIR))
